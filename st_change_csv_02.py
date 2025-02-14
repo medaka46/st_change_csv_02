@@ -72,7 +72,7 @@ def update_csv_file_remote(new_data):
         # Update the file
         update_response = requests.put(url, headers=headers, data=json.dumps(update_data))
         if update_response.status_code == 200:
-            st.success("CSV file updated successfully!")
+            st.success("CSV file updated successfully! (remote)")
         else:
             st.error(f"Failed to update CSV file: {update_response.json()}")
     else:
@@ -82,7 +82,7 @@ def update_csv_file_local(new_data):
     try:
         with open('test.csv', 'a') as f:
             f.write('\n' + new_data)
-        st.success("CSV file updated successfully!")
+        st.success("CSV file updated successfully! (local)")
     except Exception as e:
         st.error(f"Failed to update local CSV file: {str(e)}")
 

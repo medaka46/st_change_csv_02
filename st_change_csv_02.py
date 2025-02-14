@@ -88,7 +88,8 @@ def update_csv_file_local(new_data):
 
 def update_csv_file(new_data):
     if is_local():
-        update_csv_file_local(new_data)
+        update_csv_file_remote(new_data)
+        # update_csv_file_local(new_data)
     else:
         update_csv_file_remote(new_data)
 

@@ -10,6 +10,12 @@ import time
 # Load environment variables
 load_dotenv()
 
+# Add these near the top of your file, after imports
+if os.getenv('HTTP_PROXY'):
+    os.environ['HTTP_PROXY'] = os.getenv('HTTP_PROXY')
+if os.getenv('HTTPS_PROXY'):
+    os.environ['HTTPS_PROXY'] = os.getenv('HTTPS_PROXY')
+
 # Check if running locally or remotely
 def is_local():
     return os.path.exists('test.csv')
@@ -26,13 +32,25 @@ def read_csv_file_remote():
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        file_info = response.json()
-        content = base64.b64decode(file_info['content']).decode('utf-8')
-        return pd.read_csv(pd.StringIO(content))
-    else:
-        st.error(f"Failed to fetch file: {response.json()}")
+    
+    # Add debug information
+    st.write("Attempting to access:", url)
+    st.write("Token exists:", bool(GITHUB_TOKEN))
+    st.write("Owner:", REPO_OWNER)
+    st.write("Repo:", REPO_NAME)
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            file_info = response.json()
+            content = base64.b64decode(file_info['content']).decode('utf-8')
+            return pd.read_csv(pd.StringIO(content))
+        else:
+            st.error(f"Failed to fetch file. Status code: {response.status_code}")
+            st.error(f"Response: {response.text}")
+            return None
+    except requests.exceptions.RequestException as e:
+        st.error(f"Network error: {str(e)}")
         return None
 
 def read_csv_file_local():

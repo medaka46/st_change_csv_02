@@ -6,7 +6,7 @@ import io
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 # Initialize session state variables
@@ -26,24 +26,13 @@ if 'csv_data' not in st.session_state:
     st.session_state.csv_data = None
 if 'file_sha' not in st.session_state:
     st.session_state.file_sha = None
-    
-# Get environment variables with proper error handling
-def get_env_variable(var_name, default_value=""):
-    value = os.getenv(var_name)
-    return value if value else default_value
-
-# Get GitHub token - first try from environment, then from session state, then prompt user
-github_token = get_env_variable('GITHUB_TOKEN')
-if not github_token and 'github_token' in st.session_state:
-    github_token = st.session_state.github_token
 
 st.title("GitHub CSV Editor")
 
-# If token not available in env or session, ask user
+# Get token from environment variable or input
+github_token = os.getenv('GITHUB_TOKEN')
 if not github_token:
     github_token = st.text_input("Enter your GitHub Personal Access Token:", type="password")
-    if github_token:
-        st.session_state.github_token = github_token
 
 # Helper function to create headers
 def get_headers():
@@ -144,16 +133,9 @@ def save_csv_to_github(repo_owner, repo_name, file_path, df):
 
 # Reset function
 def reset_all():
-    for key in list(st.session_state.keys()):
+    for key in st.session_state.keys():
         del st.session_state[key]
-    st.rerun()  # Updated from st.experimental_rerun()
-
-# Display environment variable status
-with st.expander("Environment Variables Status"):
-    st.write("GitHub Token:", "Available ✅" if github_token else "Not set ❌")
-    st.write("Repository Owner:", "Available ✅" if get_env_variable('REPO_OWNER') else "Not set ❌")
-    st.write("Repository Name:", "Available ✅" if get_env_variable('REPO_NAME') else "Not set ❌")
-    st.write("CSV File Path:", "Available ✅" if get_env_variable('FILE_PATH') else "Not set ❌")
+    st.experimental_rerun()
 
 # Main UI flow
 if github_token:
@@ -179,32 +161,11 @@ if github_token:
     if st.session_state.token_valid:
         st.subheader("Step 2: Test Repository Access")
         
-        # Get repo values from env or session state, then fallback to input
-        repo_owner_default = get_env_variable('REPO_OWNER')
-        repo_name_default = get_env_variable('REPO_NAME')
-        
-        # Save repo details in session state
-        if 'repo_owner' not in st.session_state and repo_owner_default:
-            st.session_state.repo_owner = repo_owner_default
-        if 'repo_name' not in st.session_state and repo_name_default:
-            st.session_state.repo_name = repo_name_default
-            
         col1, col2 = st.columns(2)
         with col1:
-            repo_owner = st.text_input(
-                "Repository Owner:", 
-                value=st.session_state.get('repo_owner', repo_owner_default)
-            )
-            if repo_owner:
-                st.session_state.repo_owner = repo_owner
-                
+            repo_owner = st.text_input("Repository Owner:", value=os.getenv('REPO_OWNER', ''))
         with col2:
-            repo_name = st.text_input(
-                "Repository Name:", 
-                value=st.session_state.get('repo_name', repo_name_default)
-            )
-            if repo_name:
-                st.session_state.repo_name = repo_name
+            repo_name = st.text_input("Repository Name:", value=os.getenv('REPO_NAME', ''))
         
         if repo_owner and repo_name and not st.session_state.repo_checked:
             if st.button("Test Repository Access"):
@@ -223,19 +184,7 @@ if github_token:
         if st.session_state.repo_valid:
             st.subheader("Step 3: Select CSV File")
             
-            # Get file path from env or session state, then fallback to input
-            file_path_default = get_env_variable('FILE_PATH')
-            
-            # Save file path in session state
-            if 'file_path' not in st.session_state and file_path_default:
-                st.session_state.file_path = file_path_default
-                
-            file_path = st.text_input(
-                "CSV File Path:", 
-                value=st.session_state.get('file_path', file_path_default)
-            )
-            if file_path:
-                st.session_state.file_path = file_path
+            file_path = st.text_input("CSV File Path:", value=os.getenv('FILE_PATH', ''))
             
             if file_path and not st.session_state.file_checked:
                 if st.button("Load CSV File"):

@@ -95,7 +95,8 @@ def check_file(repo_owner, repo_name, file_path):
 def reset_all():
     for key in st.session_state.keys():
         del st.session_state[key]
-    st.experimental_rerun()
+    st.rerun()
+    # st.experimental_rerun()
 
 # Main UI flow
 if github_token:
